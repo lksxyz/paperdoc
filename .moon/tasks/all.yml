@@ -1,0 +1,73 @@
+# https://moonrepo.dev/docs/config/tasks
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/tasks.json
+$schema: 'https://moonrepo.dev/schemas/tasks.json'
+
+# Defines task deps that are implicitly inserted into all inherited tasks within a project.
+# This is extremely useful for pre-building projects that are used extensively throughout
+# the repo, or always building project dependencies.
+implicitDeps:
+  - 'packages/ui:build'
+
+# File groups for common inputs - used in task definitions for better caching
+fileGroups:
+  env:
+    - '.env'
+    - '.env.*'
+    - '.env.local'
+  docs:
+    - '*.md'
+    - 'docs/**/*'
+    - 'CHANGELOG.md'
+  config:
+    - '.moon/*.yml'
+    - '.moon/*.json'
+    - 'biome.json'
+    - 'tsconfig*.json'
+
+taskOptions:
+  runDepsInParallel: false
+
+inheritedBy:
+  language: tasks
+
+tasks:
+  env:
+    command: printenv
+    toolchain: system
+    options:
+      outputStyle: stream
+      envFile: .env
+
+  clean:
+    command: 'pnpm run cleanup'
+    options:
+      runDepsInParallel: false
+
+  docker-images:
+    script: |
+      IMAGE_PREFIX="$(jq -r .name <$workspaceRoot'/package.json')" \
+      && docker image list --filter reference=$IMAGE_PREFIX-$project\*
+    options:
+      mergeEnv: replace
+      runFromWorkspaceRoot: true
+      interactive: false
+      outputStyle: stream
+      runInCI: false
+      cache: false
+      shell: true
+
+  format:
+    command: 'biome format --write'
+    toolchain: node
+    inputs:
+      - 'fileGroup:config'
+      - 'fileGroup:docs'
+
+  lint:
+    command: 'biome check'
+    toolchain: node
+    inputs:
+      - 'fileGroup:config'
+      - 'fileGroup:docs'
+    options:
+      cache: true

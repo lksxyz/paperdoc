@@ -1,0 +1,11 @@
+# lefthook configuration for paperdoc
+# https://github.com/evilmartians/lefthook
+
+pre-commit:
+  commands:
+    format:
+      run: pnpm run format
+      stage_fixed: true
+    lint:
+      run: moon run :lint --affected --status=staged
+      stage_fixed: true

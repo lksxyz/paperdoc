@@ -1,0 +1,44 @@
+# https://moonrepo.dev/docs/config/project
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/project.json
+$schema: 'https://moonrepo.dev/schemas/project.json'
+
+layer: application
+language: typescript
+stack: backend
+tags: ['api', 'hono']
+
+project:
+  title: api
+  description: 'Paperwish API - Hono + Effect-TS backend'
+
+tasks:
+  dev:
+    command: 'pnpm run dev'
+    options:
+      runDepsInParallel: false
+      envFile: '.env'
+
+  build:
+    command: 'pnpm run build'
+    options:
+      cache: true
+
+  typecheck:
+    command: 'pnpm run typecheck'
+    options:
+      cache: true
+
+  lint:
+    command: 'pnpm run lint'
+    options:
+      cache: true
+
+  test:
+    command: 'pnpm run test'
+    options:
+      cache: true
+
+  start:
+    command: 'pnpm run start'
+    options:
+      runDepsInParallel: false

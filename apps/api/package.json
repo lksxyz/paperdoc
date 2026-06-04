@@ -1,0 +1,34 @@
+{
+    "name": "api",
+    "description": "Paperwish API - Hono + Effect-TS backend",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "prepare": "effect-language-service patch",
+        "dev": "tsx watch src/index.ts",
+        "build": "tsc --noEmit",
+        "start": "node --import tsx src/index.ts",
+        "lint": "biome check . --write",
+        "check": "biome check . --write",
+        "test": "vitest --run",
+        "test-ui": "vitest --ui",
+        "cleanup": "pnpm dlx del-cli node_modules build tests-results",
+        "update-deps": "npm-check-updates --configFileName .ncurc.json",
+        "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "@effect/platform": "^0.96.1",
+        "@hono/node-server": "^1.14.0",
+        "effect": "^3.21.2",
+        "hono": "^4.7.0"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "catalog:",
+        "@effect/language-service": "^0.86.2",
+        "@types/node": "^24.6.2",
+        "npm-check-updates": "catalog:",
+        "tsx": "^4.19.0",
+        "typescript": "catalog:",
+        "vitest": "^3.2.4"
+    }
+}

@@ -1,0 +1,114 @@
+{
+    "$schema": "https://biomejs.dev/schemas/2.4.16/schema.json",
+    "vcs": {
+        "enabled": true,
+        "clientKind": "git",
+        "useIgnoreFile": true,
+        "defaultBranch": "main"
+    },
+    "files": {
+        "ignoreUnknown": true
+    },
+    "formatter": {
+        "enabled": true,
+        "formatWithErrors": true,
+        "indentStyle": "space",
+        "indentWidth": 4,
+        "lineWidth": 100
+    },
+    "linter": {
+        "enabled": true,
+        "rules": {
+            "a11y": {
+                "noSvgWithoutTitle": "off",
+                "useKeyWithClickEvents": "off",
+                "useSemanticElements": "off",
+                "useValidAnchor": "off",
+                "noLabelWithoutControl": "off",
+                "useFocusableInteractive": "off",
+                "useAriaPropsForRole": "off",
+                "noRedundantRoles": "off"
+            },
+            "complexity": {
+                "noBannedTypes": "off",
+                "noUselessFragments": "off"
+            },
+            "correctness": {
+                "noUnusedImports": "off",
+                "noUnusedVariables": "off",
+                "noChildrenProp": "off",
+                "noUnknownFunction": "off",
+                "useJsxKeyInIterable": "off",
+                "useExhaustiveDependencies": "off"
+            },
+            "nursery": {
+                "useSortedClasses": "off"
+            },
+            "performance": {
+                "noReExportAll": "off"
+            },
+            "security": {
+                "noDangerouslySetInnerHtmlWithChildren": "off",
+                "noDangerouslySetInnerHtml": "off"
+            },
+            "style": {
+                "noNonNullAssertion": "off",
+                "noParameterAssign": "off",
+                "useAsConstAssertion": "off",
+                "useDefaultParameterLast": "off",
+                "useEnumInitializers": "off",
+                "useSelfClosingElements": "off",
+                "useSingleVarDeclarator": "off",
+                "noUnusedTemplateLiteral": "off",
+                "useNumberNamespace": "off",
+                "noInferrableTypes": "off",
+                "noUselessElse": "off",
+                "useConsistentArrayType": "off",
+                "useExportType": "off",
+                "useImportType": "off",
+                "useFilenamingConvention": "off"
+            },
+            "suspicious": {
+                "noArrayIndexKey": "off",
+                "noAssignInExpressions": "off",
+                "noCommentText": "off",
+                "noDebugger": "off",
+                "noExplicitAny": "off",
+                "noDocumentCookie": "off",
+                "noDoubleEquals": "off",
+                "noConsole": "off",
+                "noDuplicateAtImportRules": "off",
+                "noEmptyBlock": "off"
+            }
+        }
+    },
+    "javascript": {
+        "formatter": {
+            "indentWidth": 2,
+            "quoteStyle": "single",
+            "jsxQuoteStyle": "double",
+            "arrowParentheses": "always",
+            "semicolons": "asNeeded",
+            "trailingCommas": "es5",
+            "quoteProperties": "asNeeded",
+            "bracketSpacing": true,
+            "bracketSameLine": false
+        }
+    },
+    "css": {
+        "parser": {
+            "allowWrongLineComments": false,
+            "tailwindDirectives": true
+        },
+        "formatter": {
+            "enabled": true,
+            "quoteStyle": "double"
+        }
+    },
+    "json": {
+        "formatter": {
+            "indentWidth": 4,
+            "trailingCommas": "none"
+        }
+    }
+}

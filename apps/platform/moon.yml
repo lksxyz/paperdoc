@@ -1,0 +1,46 @@
+# https://moonrepo.dev/docs/config/project
+# yaml-language-server: $schema=https://moonrepo.dev/schemas/project.json
+$schema: 'https://moonrepo.dev/schemas/project.json'
+
+layer: application
+language: typescript
+stack: frontend
+tags: ['platform', 'tanstack']
+
+project:
+  title: platform
+  description: 'Paperwish Platform - TanStack Router SPA'
+
+tasks:
+  dev:
+    command: 'pnpm run dev'
+    options:
+      runDepsInParallel: false
+
+  build:
+    command: 'pnpm run build'
+    options:
+      cache: true
+
+  typecheck:
+    command: 'pnpm run typecheck'
+    options:
+      cache: true
+
+  lint:
+    command: 'pnpm run lint'
+    options:
+      cache: true
+
+  format:
+    command: 'pnpm run lint:fix'
+    options:
+      cache: true
+
+  test:
+    command: 'pnpm run test'
+    options:
+      cache: true
+
+  clean:
+    command: 'pnpm run clean'

@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "@workspace/ui/globals.css";
+
+* {
+	box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+	min-height: 100%;
+}
+
+body {
+	margin: 0;
+	font-family: "Open Runde", sans-serif;
+}

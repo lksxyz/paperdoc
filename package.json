@@ -1,0 +1,35 @@
+{
+    "name": "paperdoc",
+    "version": "0.0.0",
+    "private": true,
+    "scripts": {
+        "prepare": "moon setup",
+        "dev": "moon run :dev",
+        "build": "moon run :build",
+        "check": "moon run :check",
+        "lint": "moon run :lint",
+        "typecheck": "moon run :typecheck",
+        "test": "moon run :test",
+        "clean": "moon run :clean",
+        "format": "biome format . --write",
+        "compose:up": "docker compose -f compose.yaml up -d --remove-orphans",
+        "compose:down": "docker compose -f compose.yaml down --remove-orphans && docker compose -f compose.yaml --profile instrumented down --remove-orphans",
+        "compose:cleanup": "docker compose -f compose.yaml down --remove-orphans --volumes",
+        "compose:instrumented": "docker compose -f compose.yaml --profile instrumented up -d --remove-orphans",
+        "update-deps": "npm-check-updates --configFileName .ncurc.json",
+        "cleanup": "moon run :clean"
+    },
+    "devDependencies": {
+        "@biomejs/biome": "catalog:",
+        "npm-check-updates": "catalog:"
+    },
+    "pnpm": {
+        "onlyBuiltDependencies": [
+            "@biomejs/biome",
+            "esbuild",
+            "msgpackr-extract",
+            "msw"
+        ]
+    },
+    "packageManager": "pnpm@10.30.0"
+}
