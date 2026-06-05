@@ -1,6 +1,8 @@
 import { serve } from '@hono/node-server'
 import { Context, Effect, Layer } from 'effect'
 import { Hono } from 'hono'
+import { cors } from 'hono/cors'
+import { makeTranscriptionApp } from './routes/transcription'
 
 const AppContext = Context.GenericTag<{ readonly port: number }>('AppContext')
 
@@ -11,9 +13,14 @@ const makeApp = Effect.gen(function* () {
 
   const app = new Hono()
 
+  app.use('/*', cors())
+
   app.get('/', (c) => c.json({ message: 'Hello from Paperwish API!' }))
 
   app.get('/health', (c) => c.json({ status: 'ok' }))
+
+  const transcriptionApp = makeTranscriptionApp()
+  app.route('/api/v1', transcriptionApp)
 
   return { app, port }
 })

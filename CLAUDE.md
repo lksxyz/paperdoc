@@ -123,3 +123,7 @@ details when the documentation isn't enough.
 - `inferTasksFromScripts: true` auto-discovers tasks from `package.json`
 - Run `moon query projects` to see all projects, `moon graph` for task dependencies
 - Add `moon daemon start` to `.bashrc` for faster local execution
+
+## QVAC Reference (Tether's Decentralized AI Platform)
+
+Source: `docs/qvac-reference.txt` (downloaded from https://docs.qvac.tether.io/llms-full.txt, 19k+ lines).

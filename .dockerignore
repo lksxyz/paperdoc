@@ -7,7 +7,6 @@ _data/
 .dist
 .build
 .output
-.react-router
 .wrangler
 .cache
 .github

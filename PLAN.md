@@ -167,6 +167,93 @@ INFERENCE TIER
 
 ---
 
+## Heidi AI Scribe Adoption
+
+Research source: [heidihealth.com](https://www.heidihealth.com)
+
+Heidi AI Scribe provides real-time clinical documentation with a wearable microphone, multi-language support (110+), and specialty-specific workflows. The following features can be adopted into this project:
+
+### Already Possible with Current Architecture
+
+| Heidi Feature | Our Implementation | Status |
+|---|---|---|
+| Real-time transcription | QVAC `transcription()` (Whisper) | ✅ |
+| Structured note generation | SOAP note output | ✅ |
+| Voice assistant pipeline | `voice-assistant` (transcription → LLM → TTS) | ✅ |
+| Multi-language (110+) | QVAC transcription + translation | ✅ |
+| Offline processing | QVAC local/decentralized design | ✅ |
+| EHR integration | FHIR Composition storage | ✅ |
+| Specialty-specific notes | Different prompt templates | ✅ |
+
+### New Features to Adopt
+
+#### 1. Clinician Voice Personalization
+Heidi captures the clinician's natural writing style over time, not generic templates.
+
+**Implementation:**
+- Store previous accepted notes per clinician in FHIR
+- Build RAG context from past notes
+- Inject style context into prompt for consistent voice
+
+#### 2. Before/During/After Consult Workflow
+Heidi's explicit workflow states: pre-consult preparation, real-time capture, post-consult actions.
+
+**Add to existing flow:**
+```
+BEFORE_CONSULT → DURING_CONSULT → AFTER_CONSULT → COMPLETE
+```
+
+- **Before**: Load patient history, sync schedule, display key findings
+- **During**: Real-time transcription, live structured note generation, instant referral/handout
+- **After**: One-click EHR save, coding suggestions, follow-up scheduling
+
+#### 3. Medical Coding Auto-Suggest
+Heidi auto-applies coding (ICD-10, CPT) post-consult.
+
+**Add to architecture:**
+- LLM extracts diagnostic codes from assessment
+- Map to ICD-10/CPT codes
+- Present for clinician review before FHIR save
+
+#### 4. Multi-Specialty Templates
+Heidi supports GP, Mental Health, Allied Health, Nurses, Veterinarians, etc.
+
+**Expand prompt templates:**
+- `general-practice` — standard SOAP
+- `mental-health` — longer subjective, risk assessment fields
+- `allied-health` — treatment-focused plan
+- `nurses` — nursing notes format
+- `veterinarians` — animal-specific fields (species, breed)
+
+#### 5. Communication Automation (Heidi Comms)
+Automated patient confirmations and follow-ups without extending clinician workload.
+
+**Future consideration:**
+- Patient SMS/email confirmations via FHIR Communication resource
+- Automated follow-up reminders based on follow-up date
+
+#### 6. Evidence Lookup (Heidi Evidence)
+AI-powered clinical evidence during consult.
+
+**Implementation:**
+- Add `textEmbeddings()` over medical literature (e.g., PubMed subset)
+- Real-time evidence retrieval during generation
+
+### Priority for Hackathon
+
+| Priority | Feature | Effort |
+|---|---|---|
+| P1 | Expand specialty templates (Mental Health, Allied Health) | Low |
+| P1 | Before/During/After workflow states | Medium |
+| P2 | Medical coding suggestions | Medium |
+| P2 | Voice personalization (RAG context) | High |
+| P3 | Communication automation | High |
+| P3 | Evidence lookup | High |
+
+---
+
+---
+
 ## QVAC Integration
 
 **Models:** MedPsy-4B-GGUF (QVAC collection on HuggingFace)
