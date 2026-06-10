@@ -1,0 +1,3 @@
+{
+  "extends": "@Paperdoc/config/tsconfig.base.json"
+}

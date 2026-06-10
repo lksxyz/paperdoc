@@ -1,0 +1,38 @@
+{
+  "name": "Paperdoc",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "check-types": "turbo check-types",
+    "dev:native": "turbo -F native dev",
+    "dev:web": "turbo -F web dev",
+    "dev:server": "turbo -F server dev",
+    "db:push": "turbo -F @Paperdoc/db db:push",
+    "db:studio": "turbo -F @Paperdoc/db db:studio",
+    "db:generate": "turbo -F @Paperdoc/db db:generate",
+    "db:migrate": "turbo -F @Paperdoc/db db:migrate",
+    "db:local": "turbo -F @Paperdoc/db db:local",
+    "check": "oxlint && oxfmt --write"
+  },
+  "dependencies": {
+    "@Paperdoc/env": "workspace:*",
+    "dotenv": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@Paperdoc/config": "workspace:*",
+    "@types/bun": "catalog:",
+    "lefthook": "^2.1.9",
+    "oxfmt": "^0.53.0",
+    "oxlint": "^1.68.0",
+    "turbo": "^2.9.16",
+    "typescript": "catalog:"
+  },
+  "packageManager": "pnpm@10.30.0"
+}

@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "scheme": "Paperdoc",
+    "userInterfaceStyle": "automatic",
+    "orientation": "default",
+    "web": {
+      "bundler": "metro"
+    },
+    "name": "Paperdoc",
+    "slug": "Paperdoc",
+    "plugins": ["expo-font"],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
