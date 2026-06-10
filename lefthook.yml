@@ -5,8 +5,19 @@ pre-commit:
   parallel: true
   jobs:
     - name: oxlint
+      glob:
+        - "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts}"
+      exclude:
+        - "**/routeTree.gen.ts"
+        - "**/*.test.{ts,tsx}"
+        - "**/*.spec.{ts,tsx}"
       run: pnpm oxlint --fix {staged_files}
       stage_fixed: true
     - name: oxfmt
+      glob:
+        - "*.{js,jsx,mjs,cjs,ts,tsx,mts,cts,json,css,md,mdx,html}"
+      exclude:
+        - "**/routeTree.gen.ts"
+        - "pnpm-lock.yaml"
       run: pnpm oxfmt --write {staged_files}
       stage_fixed: true
