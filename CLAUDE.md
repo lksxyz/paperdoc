@@ -2,6 +2,16 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## First rule: read the docs, never assume
+
+Before writing or changing any code in this repo — especially anything that touches `@qvac/sdk`, the parakeet addon, or any other QVAC surface — **read the source of truth first**. The user has flagged repeatedly that guessed APIs waste their time.
+
+- **QVAC SDK reference:** `docs/llms-full.txt` (mirror of `https://docs.qvac.tether.io/llms-full.txt`). Open it with the Read tool and grep for the relevant task (`transcription`, `completion`, `embed`, `diffusion`, etc.) before writing the call. Do not paraphrase the API from memory.
+- **Installed package source:** when using a specific QVAC package, also read its `node_modules/.../index.d.ts` (or `.d.ts` for any package) and the package's own README. For `@qvac/transcription-parakeet`, the README in `node_modules/.../@qvac/transcription-parakeet/README.md` documents the exact `TranscriptionParakeet` lifecycle, the `run()` / `runStreaming()` output shape, and the codec constraints.
+- **Env / config:** the canonical env schemas live in `packages/env/src/{server,web,native}.ts`; the Drizzle schema lives in `packages/db/src/schema/`. Read those before adding fields.
+
+If the docs are ambiguous, ask the user — do not fill the gap with a guess.
+
 ## Project
 
 Paperdoc is a QVAC hackathon project — a Better-T-Stack monorepo integrating Tether's local-first `@qvac/sdk` AI runtime into a mobile + backend app. Built 2026-06-10 with [create-better-t-stack](https://github.com/AmanVarshney01/create-better-t-stack) v3.32.0; the reproducible command and addon selection are pinned in `bts.jsonc` at the repo root. Re-run `pnpm dlx create-better-t-stack add` to extend the stack.
