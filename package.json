@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "bun run src/cli.ts run",
+    "download-model": "bun run src/cli.ts download-model",
     "build": "bun build --target=bun --outdir=dist src/cli.ts src/server/index.ts",
     "appimage": "bash build/appimage.sh"
   },
