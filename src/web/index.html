@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paperdoc — Medical Scribe</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div id="app">
+    <div class="notice-band" role="note" aria-label="AI disclaimer">
+      <span class="notice-dot" aria-hidden="true"></span>
+      <span class="notice-text">AI-generated draft — requires clinician review before becoming a clinical record</span>
+    </div>
+
+    <header class="app-header">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22"><path d="M6 3h9l4 4v14H6V3z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M15 3v4h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 12h7M9 15h7M9 18h4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+        </span>
+        <div class="brand-text">
+          <span class="brand-name">Paperdoc</span>
+          <span class="brand-tag">Local medical scribe</span>
+        </div>
+      </div>
+
+      <nav class="primary-nav" aria-label="Primary">
+        <button class="nav-link is-active" data-view="record">Record</button>
+        <button class="nav-link" data-view="upload">Upload</button>
+        <button class="nav-link" data-view="library">Library</button>
+      </nav>
+
+      <div class="header-right">
+        <div class="system-pill" data-system="ready">
+          <span class="system-dot" aria-hidden="true"></span>
+          <span class="system-label" id="system-label">Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <main class="workspace">
+
+      <!-- ==================== RECORD VIEW ==================== -->
+      <section class="view is-active" data-view="record" aria-labelledby="record-heading">
+        <div class="workspace-header">
+          <div class="workspace-eyebrow">Workspace · Live capture</div>
+          <h1 id="record-heading" class="workspace-title">Record a consultation</h1>
+          <p class="workspace-lede">Capture the room, then stop to transcribe, diarize, and draft the SOAP note locally on this machine.</p>
+        </div>
+
+        <div class="stage" data-stage="idle">
+          <div class="stage-monitor" aria-live="polite">
+            <div class="timer">
+              <span class="timer-digits" id="timer-digits">00:00</span>
+              <span class="timer-suffix" id="timer-suffix">.0</span>
+            </div>
+            <div class="waveform" id="waveform" aria-hidden="true">
+              <canvas id="waveform-canvas"></canvas>
+              <div class="waveform-bars" id="waveform-bars"></div>
+            </div>
+            <div class="stage-status" id="stage-status">Press record to begin capturing audio</div>
+          </div>
+
+          <div class="stage-actions">
+            <button id="btn-record" class="btn-record" type="button">
+              <span class="btn-record-dot" aria-hidden="true"></span>
+              <span class="btn-record-label">Start recording</span>
+            </button>
+            <button id="btn-stop" class="btn-stop" type="button" hidden>
+              <span class="btn-stop-square" aria-hidden="true"></span>
+              <span class="btn-stop-label">Stop &amp; process</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="live-panel" id="live-panel" hidden>
+          <div class="panel-head">
+            <div class="panel-eyebrow">
+              <span class="live-pulse" aria-hidden="true"></span>
+              <span>Live transcript</span>
+            </div>
+            <span class="panel-meta" id="live-meta">streaming from this device</span>
+          </div>
+          <div class="live-stream" id="live-stream">
+            <span class="live-placeholder">Awaiting audio…</span>
+          </div>
+        </div>
+
+        <div class="output" id="output" hidden></div>
+      </section>
+
+      <!-- ==================== UPLOAD VIEW ==================== -->
+      <section class="view" data-view="upload" aria-labelledby="upload-heading" hidden>
+        <div class="workspace-header">
+          <div class="workspace-eyebrow">Workspace · File import</div>
+          <h1 id="upload-heading" class="workspace-title">Upload an audio file</h1>
+          <p class="workspace-lede">Drop a recording from a previous session or an external device. The file is processed entirely on this machine.</p>
+        </div>
+
+        <div class="dropzone" id="dropzone" tabindex="0" role="button" aria-label="Choose an audio file">
+          <input type="file" id="file-input" accept="audio/*,.m4a,.mp3,.wav,.webm" hidden>
+          <div class="dropzone-inner" id="dropzone-empty">
+            <div class="dropzone-glyph" aria-hidden="true">
+              <svg viewBox="0 0 48 48" width="40" height="40"><path d="M24 32V12M16 20l8-8 8 8" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M8 32v6h32v-6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+            </div>
+            <div class="dropzone-title">Drop an audio file or click to browse</div>
+            <div class="dropzone-hint">M4A · MP3 · WAV · WEBM</div>
+          </div>
+          <div class="dropzone-file" id="dropzone-file" hidden>
+            <div class="file-card">
+              <span class="file-glyph" aria-hidden="true">♪</span>
+              <div class="file-meta">
+                <div class="file-name" id="file-name">file.m4a</div>
+                <div class="file-size" id="file-size">—</div>
+              </div>
+              <button id="btn-remove-file" class="file-remove" type="button" aria-label="Remove file">×</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="stage-actions stage-actions-row">
+          <button id="btn-generate" class="btn-primary" type="button" disabled>
+            <span>Generate SOAP note</span>
+            <span class="btn-arrow" aria-hidden="true">→</span>
+          </button>
+        </div>
+
+        <div class="output" id="upload-output" hidden></div>
+      </section>
+
+      <!-- ==================== LIBRARY VIEW ==================== -->
+      <section class="view" data-view="library" aria-labelledby="library-heading" hidden>
+        <div class="workspace-header">
+          <div class="workspace-eyebrow">Workspace · Sessions</div>
+          <h1 id="library-heading" class="workspace-title">Session library</h1>
+          <p class="workspace-lede">Every consultation stays on this device. Re-open a session to review the SOAP draft, the transcript, or export the file.</p>
+        </div>
+
+        <div class="library" id="library">
+          <div class="library-empty" id="library-empty">
+            <div class="library-empty-title">No sessions yet</div>
+            <div class="library-empty-hint">Record or upload audio to create your first consultation.</div>
+          </div>
+          <div class="library-list" id="library-list" hidden></div>
+        </div>
+
+        <div class="library-detail" id="library-detail" hidden></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="/app.js" type="module"></script>
+</body>
+</html>

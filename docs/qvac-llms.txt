@@ -1,0 +1,101 @@
+# QVAC Documentation
+
+Agent index for the QVAC developer documentation. QVAC is Tether's local-first AI SDK for cross-platform, peer-to-peer applications.
+
+## Guidance
+
+- To fetch one page as Markdown, append `.md` to its path (e.g. `/quickstart` → `/quickstart.md`). Alternatively, send the HTTP header `Accept: text/markdown` and any page URL will be redirected to its Markdown variant.
+- To obtain a dump with all documentation, fetch `/llms-full.txt`.
+- When citing sources to users, use the canonical URL without `.md` (e.g. `/quickstart`), not the Markdown variant.
+- Latest SDK version: v0.13.3
+- Total pages: 57
+
+## Overview
+
+- [QVAC by Tether: the Infinite Stable Intelligence Platform](/): A local AI SDK for building cross-platform, P2P applications and systems.
+- [Installation](/installation): Supported environments and how to install the SDK for each one.
+- [Introduction](/introduction): Use the JS/TS SDK to build local and P2P AI applications and systems.
+- [Quickstart](/quickstart): Run your first example using the JS/TS SDK. At the end, you'll find instructions to run any example in this documentation.
+- [System requirements](/system-requirements): Host requirements for running QVAC SDK and CLI, validated by `qvac doctor`.
+- [Troubleshooting](/troubleshooting): Resolve common issues when using QVAC.
+
+## About
+
+- [How it works](/about/how-it-works): Understand what happens under the hood when you use QVAC SDK in your application.
+- [Public launch](/about/public-launch): Tether's public launch of QVAC at Plan B Forum Lugano (October 2025) — keynotes from Paolo Ardoino, Subash, and Marco Chiappetta.
+- [Our vision](/about/vision): Tether's vision for QVAC — the Infinite Stable Intelligence Platform — local-first AI at the edge, the foundational layer for the decentralized mind.
+
+## Addons
+
+- [Addons](/addons): Reference for the QVAC components that provide AI capabilities.
+- [@qvac/diffusion-cpp](/addons/diffusion-cpp): Text-to-image generation from text prompts.
+- [@qvac/embed-llamacpp](/addons/embed-llamacpp): Vector embedding generation for semantic search, clustering, and retrieval that seamlessly supports retrieval-augmented generation workflow.
+- [@qvac/llm-llamacpp](/addons/llm-llamacpp): LLM inference for text generation and chat with support to images, and other media within a single conversation context.
+- [@qvac/ocr-onnx](/addons/ocr-onnx): Optical character recognition (OCR) for extracting text from images.
+- [@qvac/transcription-parakeet](/addons/transcription-parakeet): Automatic speech recognition (ASR) for speech-to-text with speaker diarization.
+- [@qvac/transcription-whispercpp](/addons/transcription-whispercpp): Automatic speech recognition (ASR) for speech-to-text.
+- [@qvac/translation-nmtcpp](/addons/translation-nmtcpp): Text-to-text neural machine translation (NMT).
+- [@qvac/tts-onnx](/addons/tts-onnx): Speech synthesis for text-to-speech (TTS).
+
+## AI Capabilities
+
+- [BCI](/ai-capabilities/bci): Brain–computer interface (BCI) transcription — decode multi-channel neural signals into text.
+- [Fine-tuning](/ai-capabilities/fine-tuning): Adapting LLMs to domain-specific tasks via LoRA — i.e., train small adapter weights on custom datasets to specialize model behavior.
+- [Image classification](/ai-capabilities/image-classification): Assign one or more class labels to an input image with confidence scores.
+- [Image generation](/ai-capabilities/image-generation): Text-to-image and image-to-image generation using a customized Diffusion engine.
+- [Multimodal](/ai-capabilities/multimodal): LLM inference over text, images, and other media within a single conversation context.
+- [OCR](/ai-capabilities/ocr): Optical character recognition (OCR) for extracting text from images.
+- [RAG](/ai-capabilities/rag): Out-of-the-box retrieval-augmented generation workflow.
+- [Text embeddings](/ai-capabilities/text-embeddings): Vector embedding generation for semantic search, clustering, and retrieval.
+- [Text generation](/ai-capabilities/text-generation): LLM inference for text generation and chat — i.e., use a large language model to generate text output based on input prompts and context.
+- [Text-to-Speech](/ai-capabilities/text-to-speech): Speech synthesis for text-to-speech (TTS) — i.e., generate audio using custom voices from written input.
+- [Transcription](/ai-capabilities/transcription): Automatic speech recognition (ASR) for speech-to-text — i.e., generate text transcriptions from audio input.
+- [Translation](/ai-capabilities/translation): Text-to-text neural machine translation (NMT) — i.e., translate text between different languages.
+- [Video generation](/ai-capabilities/video-generation): Text-to-video and image-to-video generation using a customized Diffusion engine.
+- [VLA](/ai-capabilities/vla): Vision-language-action inference — run a VLA policy that turns camera frames, robot state, and a natural-language instruction into an action chunk.
+- [Voice assistant](/ai-capabilities/voice-assistant): Real-time voice conversation pipeline — microphone → transcription → LLM → text-to-speech → speakers.
+
+## CLI
+
+- [CLI](/cli): QVAC CLI provides tools and an HTTP server that exposes an OpenAI-compatible API.
+- [HTTP server](/cli/http-server): Run a local HTTP server that exposes an OpenAI-compatible API.
+- [Connect AI tools to QVAC](/cli/http-server/connection): Use the HTTP server as a local model provider for AI tools that support OpenAI-compatible API.
+- [Integrate with the OpenAI-compatible server](/cli/http-server/integration): Use the npm package @qvac/ai-sdk-provider to create a client for the HTTP server.
+
+## Configuration
+
+- [Configuration](/configuration): Use qvac.config.* to configure QVAC's overall behavior.
+- [Plugin system](/configuration/plugins): Enable and disable built-in AI capabilities, and add new ones via custom plugins.
+- [Write a custom plugin](/configuration/plugins/write-custom-plugin): Guidelines to ship your custom plugin as a single npm package.
+
+## Models
+
+- [Download lifecycle](/models/download-lifecycle): Pause and resume model downloads.
+- [Sharded models](/models/sharded-models): Download a model that is sharded into multiple parts.
+
+## P2P Capabilities
+
+- [Blind relays](/p2p-capabilities/blind-relays): Establish peer connections through NAT/firewalls by routing traffic via relay nodes.
+- [Delegated inference](/p2p-capabilities/delegated-inference): Perform peer-to-peer inference delegation out-of-the-box via Holepunch stack, enabling resource sharing.
+
+## Reference
+
+- [API Summary — v0.13.x (latest)](/reference/api): One-page reference of all public functions and objects exported by @qvac/sdk
+- [SDK Release Notes — v0.13.x (latest)](/reference/release-notes): Lists all releases from v0.13.0 to v0.13.3.
+- [SDK Release Notes — v0.10.x](/reference/release-notes/v0.10.x): Lists all releases from v0.10.0 to v0.10.2.
+- [SDK Release Notes — v0.11.x](/reference/release-notes/v0.11.x): Release notes for QVAC SDK v0.11.0.
+- [SDK Release Notes — v0.12.x](/reference/release-notes/v0.12.x): Release notes for QVAC SDK v0.12.0.
+- [SDK Release Notes — v0.8.x](/reference/release-notes/v0.8.x): Lists all releases from v0.8.0 to v0.8.3.
+- [SDK Release Notes — v0.9.x](/reference/release-notes/v0.9.x): Lists all releases from v0.9.0 to v0.9.2.
+
+## Runtime
+
+- [Cancellation](/runtime/cancellation): Cancel any in-flight long-running SDK operation by requestId, or broad-cancel by modelId.
+- [Runtime lifecycle](/runtime/lifecycle): Suspend and resume the SDK runtime (e.g., when the host app moves to background) and query lifecycle state.
+- [Logging](/runtime/logging): Visibility into what's happening during loading, inference, and other operations.
+- [Profiler](/runtime/profiler): Measure and export timing metrics across model loading, inference, and P2P delegation.
+
+## Tutorials
+
+- [Build an Electron app](/tutorials/electron): Hands-on tutorial on using QVAC SDK with Electron.
+- [Build an Expo app](/tutorials/expo): Hands-on tutorial on using QVAC SDK with Expo.

@@ -1,0 +1,27 @@
+# Paperdoc Configuration
+# Place this file at ~/.paperdoc/config.yml to customize
+
+# Server port
+port: 7321
+
+# Model configuration
+# Models are auto-detected from ~/.qvac/models/ and symlinked to ~/.paperdoc/models/
+# You can override with absolute paths if needed
+models:
+  asr_live: "WHISPER_TINY"           # Live streaming ASR (78MB)
+  asr_batch: "PARAKEET_TDT"          # Batch transcription with diarization (750MB)
+  diarization: "SORTFORMER_4SPK"     # Speaker diarization (140MB)
+  llm: "QWEN3_1_7B_INST_Q4"          # SOAP generation LLM (~1.1GB)
+
+# UI settings
+ui:
+  theme: "light"                     # "light" or "dark"
+  language: "en"                     # Currently English only
+
+# Download settings
+download:
+  auto_download: true                # Auto-download missing models on first run
+  parallel: false                    # Download models sequentially to avoid overwhelming the system
+
+# Database
+# SQLite database location: ~/.paperdoc/data.db
