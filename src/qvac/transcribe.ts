@@ -1,4 +1,5 @@
 import { loadModelByName, unloadModelByName, getQvacSdk } from "./init.js";
+import { WHISPER_EN_TINY_Q8_0, PARAKEET_TDT_0_6B_V3_Q8_0, PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0 } from "@qvac/sdk";
 
 export interface DiarizedSegment {
   speaker: string;
@@ -18,7 +19,7 @@ export async function transcribeLive(
   onChunk?: (text: string) => void
 ): Promise<string> {
   const sdk = await getQvacSdk();
-  const modelId = await loadModelByName("asr_live", "WHISPER_TINY", {
+  const modelId = await loadModelByName("asr_live", WHISPER_EN_TINY_Q8_0, {
     language: "en",
     no_timestamps: true,
     suppress_blank: true,
@@ -47,7 +48,7 @@ export async function transcribeBatch(audioPath: string): Promise<string> {
   console.log(`  ▸ Transcribing with Parakeet TDT...`);
   const modelId = await loadModelByName(
     "asr_batch",
-    "parakeet-tdt-0.6b-v3.q8_0.gguf",
+    PARAKEET_TDT_0_6B_V3_Q8_0,
     {},
     "parakeet-transcription"
   );
@@ -140,7 +141,7 @@ export async function runSortformer(audioPath: string): Promise<DiarizedSegment[
   console.log(`  ▸ Running Sortformer diarization...`);
   const modelId = await loadModelByName(
     "diarization",
-    "diar_streaming_sortformer_4spk-v2.1.q8_0.gguf",
+    PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0,
     {},
     "parakeet-transcription"
   );

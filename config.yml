@@ -8,10 +8,10 @@ port: 7321
 # Models are auto-detected from ~/.qvac/models/ and symlinked to ~/.paperdoc/models/
 # You can override with absolute paths if needed
 models:
-  asr_live: "WHISPER_TINY"           # Live streaming ASR (78MB)
-  asr_batch: "PARAKEET_TDT"          # Batch transcription with diarization (750MB)
-  diarization: "SORTFORMER_4SPK"     # Speaker diarization (140MB)
-  llm: "QWEN3_1_7B_INST_Q4"          # SOAP generation LLM (~1.1GB)
+  asr_live: "WHISPER_EN_TINY_Q8_0"          # Live streaming ASR, English-only (44MB)
+  asr_batch: "PARAKEET_TDT_0_6B_V3_Q8_0"    # Batch transcription (750MB)
+  diarization: "PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0"  # Speaker diarization (140MB)
+  llm: "QWEN3_1_7B_INST_Q4"                 # SOAP generation LLM (~1.1GB)
 
 # UI settings
 ui:

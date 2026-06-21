@@ -61,13 +61,13 @@ async function downloadModels() {
   console.log("  Downloading models...\n");
 
   const config = loadConfig();
-  const { loadModel, unloadModel } = await import("@qvac/sdk");
+  const { loadModel, unloadModel, close } = await import("@qvac/sdk");
 
   const models = [
     { name: "Live ASR (Whisper Tiny)", const: config.models.asr_live, type: "whispercpp-transcription" },
     { name: "Batch Transcription (Parakeet TDT)", const: config.models.asr_batch, type: "parakeet-transcription" },
     { name: "Speaker Diarization (Sortformer)", const: config.models.diarization, type: "parakeet-transcription" },
-    { name: "SOAP LLM (Qwen3-4B)", const: config.models.llm, type: "llamacpp-completion" },
+    { name: "SOAP LLM (Qwen3-1.7B)", const: config.models.llm, type: "llamacpp-completion" },
   ];
 
   for (const model of models) {
@@ -91,6 +91,8 @@ async function downloadModels() {
   }
 
   console.log("\n  All downloads complete.");
+  await close();
+  process.exit(0);
 }
 
 async function runServer() {

@@ -24,10 +24,10 @@ export interface PaperdocConfig {
 const DEFAULT_CONFIG: PaperdocConfig = {
   port: 7321,
   models: {
-    asr_live: "WHISPER_TINY",
+    asr_live: "WHISPER_EN_TINY_Q8_0",
     asr_batch: "PARAKEET_TDT_0_6B_V3_Q8_0",
-    diarization: "PARAKEET_SORTFORMER_4SPK_V1_Q8_0",
-    llm: "QWEN3_4B_Q4_K_M",
+    diarization: "PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0",
+    llm: "QWEN3_1_7B_INST_Q4",
   },
   ui: {
     theme: "light",

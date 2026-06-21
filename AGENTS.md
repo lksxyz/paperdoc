@@ -18,17 +18,17 @@ Paperdoc is a local-first Medical Scribe AI that runs entirely on the doctor's m
 1. **Record**: Browser captures audio via MediaRecorder → streams chunks to server via WebSocket
 2. **Live Display**: Server runs Whisper Tiny `transcribeStream()` → real-time transcript shown in browser (undifferentiated, confirmation only)
 3. **Stop & Process**: Full audio file → Parakeet TDT + Sortformer batch diarization → produces speaker-labeled transcript ("Doctor: ... / Patient: ...")
-4. **SOAP Generation**: Diarized transcript → Qwen3-4B with structured prompt → editable SUBJECTIVE / OBJECTIVE / ASSESSMENT / PLAN sections
+4. **SOAP Generation**: Diarized transcript → Qwen3-1.7B with structured prompt → editable SUBJECTIVE / OBJECTIVE / ASSESSMENT / PLAN sections
 5. **Export**: Doctor reviews, edits, downloads as `.txt`
 
 ## Model Mapping
 
 | Purpose | QVAC Constant | Cached File |
 |---------|---------------|-------------|
-| Live ASR | `WHISPER_TINY` | `574dfe543bfdae68_ggml-tiny.bin` (~78MB) |
-| Batch Transcription | `PARAKEET_TDT` | `cefd830cf8c3dc92_parakeet-tdt-0.6b-v3.q8_0.gguf` (~750MB) |
-| Speaker Diarization | `SORTFORMER_4SPK` | `8ac9c06324638ada_diar_streaming_sortformer_4spk-v2.1.q8_0.gguf` (~140MB) |
-| SOAP Generation | `QWEN3_1_7B_INST_Q4` | `<hash>_Qwen3-1.7B-Inst-Q4.gguf` (~1.1GB, hash set on first download) |
+| Live ASR | `WHISPER_EN_TINY_Q8_0` | `ggml-tiny.en-q8_0.bin` (~44MB) |
+| Batch Transcription | `PARAKEET_TDT_0_6B_V3_Q8_0` | `parakeet-tdt-0.6b-v3.q8_0.gguf` (~750MB) |
+| Speaker Diarization | `PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0` | `diar_streaming_sortformer_4spk-v2.1.q8_0.gguf` (~140MB) |
+| SOAP Generation | `QWEN3_1_7B_INST_Q4` | `Qwen3-1.7B-Q4_0.gguf` (~1.1GB) |
 
 ## CLI Commands
 
