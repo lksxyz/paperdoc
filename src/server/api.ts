@@ -15,10 +15,18 @@ import {
 } from "./db.js";
 import { transcribeWithDiarization, transcribeLive, transcribeBatch } from "../qvac/transcribe.js";
 import { generateSoap } from "../qvac/soap.js";
+import { getLog, clearLog } from "../qvac/audit.js";
 
 export const apiRoutes = new Hono();
 
 apiRoutes.get("/health", (c) => c.json({ status: "ok" }));
+
+apiRoutes.get("/audit-log", (c) => c.json({ events: getLog() }));
+
+apiRoutes.delete("/audit-log", (c) => {
+  clearLog();
+  return c.json({ ok: true });
+});
 
 apiRoutes.get("/sessions", (c) => {
   const sessions = getSessions();
@@ -275,8 +283,9 @@ async function saveAndConvert(sessionId: number, body: ArrayBuffer, contentType:
   try { rmSync(inputPath); } catch {}
 
   if (ffmpegResult.status !== 0) {
-    console.error("FFmpeg error:", ffmpegResult.stderr?.toString());
-    return c.json({ error: "Audio conversion failed", detail: ffmpegResult.stderr?.toString() }, 500) as any;
+    const msg = ffmpegResult.stderr?.toString() || "Unknown FFmpeg error";
+    console.error("FFmpeg error:", msg);
+    throw new Error(msg);
   }
 
   return wavPath;

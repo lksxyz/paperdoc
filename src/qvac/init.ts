@@ -1,6 +1,7 @@
 import { join } from "node:path";
 import { existsSync } from "node:fs";
 import { PAPERDOC_MODELS_DIR, QVAC_MODELS_DIR, getModelPath } from "../config.js";
+import { addEvent } from "./audit.js";
 
 // Lazy imports to avoid loading QVAC SDK until needed
 let qvacSdk: typeof import("@qvac/sdk") | null = null;
@@ -39,7 +40,11 @@ export async function loadModelByName(
       ? getModelPath(modelSrc) || modelSrc
       : modelSrc;
 
-  console.log(`  Loading model: ${name} (${typeof resolved === "string" ? resolved : resolved.name ?? "descriptor"})`);
+  const modelTypeLabel = typeof resolved === "string" ? resolved : (resolved as any).name ?? "descriptor";
+
+  console.log(`  Loading model: ${name} (${modelTypeLabel})`);
+  addEvent({ event: "model_load", model_name: name, model_type: modelTypeLabel, status: "start" });
+
   const loadOptions: any = {
     modelSrc: resolved,
     modelConfig,
@@ -61,9 +66,17 @@ export async function loadModelByName(
     loadOptions.modelType = modelType;
   }
 
-  const modelId = await sdk.loadModel(loadOptions);
+  const loadStart = Date.now();
+  let modelId: string;
+  try {
+    modelId = await sdk.loadModel(loadOptions);
+  } catch (err) {
+    addEvent({ event: "model_load", model_name: name, model_type: modelTypeLabel, status: "error", duration_ms: Date.now() - loadStart, error: String(err) });
+    throw err;
+  }
+  addEvent({ event: "model_load", model_name: name, model_type: modelTypeLabel, status: "success", duration_ms: Date.now() - loadStart });
 
-  loadedModels.set(name, { loaded: true, modelId, type: name });
+  loadedModels.set(name, { loaded: true, modelId, type: modelTypeLabel });
   return modelId;
 }
 
@@ -72,7 +85,10 @@ export async function unloadModelByName(name: string): Promise<void> {
   const existing = loadedModels.get(name);
 
   if (existing?.loaded && existing.modelId) {
+    addEvent({ event: "model_unload", model_name: name, model_type: existing.type, status: "start" });
+    const start = Date.now();
     await sdk.unloadModel({ modelId: existing.modelId });
+    addEvent({ event: "model_unload", model_name: name, model_type: existing.type, status: "success", duration_ms: Date.now() - start });
     loadedModels.delete(name);
   }
 }
@@ -81,7 +97,10 @@ export async function unloadAllModels(): Promise<void> {
   const sdk = await getQvacSdk();
   for (const [name, status] of loadedModels) {
     if (status.modelId) {
+      const start = Date.now();
+      addEvent({ event: "model_unload", model_name: name, model_type: status.type, status: "start" });
       await sdk.unloadModel({ modelId: status.modelId }).catch(() => {});
+      addEvent({ event: "model_unload", model_name: name, model_type: status.type, status: "success", duration_ms: Date.now() - start });
     }
   }
   loadedModels.clear();

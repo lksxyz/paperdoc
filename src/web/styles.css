@@ -940,7 +940,7 @@ scrollbar-gutter: stable;
   color: var(--ink-2);
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 160px;
+  height: 144px;
   overflow-y: auto;
   padding: var(--s-3) var(--s-4);
   background: var(--surface);
@@ -1356,6 +1356,43 @@ scrollbar-gutter: stable;
   font-size: 16px;
 }
 
+/* ---------- Detail tabs (Result / Audit log) --------------------------- */
+.detail-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 1px solid var(--hairline);
+  padding: 0 var(--s-6);
+  background: var(--paper-soft);
+}
+.detail-tab {
+  appearance: none;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink-3);
+  padding: var(--s-3) var(--s-4);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+.detail-tab:hover {
+  color: var(--ink);
+}
+.detail-tab.is-active {
+  color: var(--ink);
+  font-weight: 600;
+  border-bottom-color: var(--ink);
+}
+.detail-pane {
+  display: none;
+}
+.detail-pane.is-active {
+  display: block;
+}
+
 /* ---------- Library detail --------------------------------------------- */
 .library-detail {
   margin-top: var(--s-7);
@@ -1385,6 +1422,163 @@ scrollbar-gutter: stable;
 }
 .detail-body {
   padding: var(--s-6);
+}
+
+/* ---------- Audit trail (performance log) ------------------------------- */
+.audit-step {
+  margin-top: var(--s-3);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--r-lg);
+  overflow: hidden;
+}
+.audit-toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+  width: 100%;
+  padding: var(--s-3) var(--s-5);
+  background: none;
+  border: 0;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-3);
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    background 120ms ease;
+  text-align: left;
+}
+.audit-toggle:hover {
+  color: var(--ink);
+  background: var(--paper-soft);
+}
+.audit-toggle-icon {
+  font-size: 11px;
+  color: var(--ink-4);
+  transition: transform 160ms ease;
+  width: 14px;
+  text-align: center;
+}
+.audit-step.is-open .audit-toggle-icon {
+  transform: rotate(90deg);
+}
+.audit-badge {
+  margin-left: auto;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: var(--ink-4);
+  font-family: var(--font-mono);
+}
+.audit-body {
+  display: none;
+  border-top: 1px solid var(--hairline);
+}
+.audit-step.is-open .audit-body {
+  display: block;
+}
+.audit-list {
+  padding: var(--s-3) var(--s-5) var(--s-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+.audit-row {
+  display: grid;
+  grid-template-columns: 80px auto 60px 70px 60px;
+  gap: var(--s-3);
+  align-items: center;
+  padding: 5px var(--s-3);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--ink-2);
+  border-radius: var(--r-xs);
+  transition: background 120ms ease;
+}
+.audit-row:hover {
+  background: var(--paper-soft);
+}
+.audit-row.is-load {
+  grid-template-columns: 80px auto 60px 70px 60px;
+}
+.audit-row.is-inference {
+  grid-template-columns: 80px auto 60px 70px 60px 70px;
+}
+.audit-row-head {
+  display: grid;
+  grid-template-columns: 80px auto 60px 70px 60px 70px;
+  gap: var(--s-3);
+  align-items: center;
+  padding: 4px var(--s-3) 3px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-4);
+  border-bottom: 1px solid var(--hairline);
+  margin-bottom: var(--s-1);
+}
+.audit-row-head span {
+  font-family: var(--font-mono);
+}
+.audit-model {
+  font-weight: 500;
+  color: var(--ink);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.audit-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+}
+.audit-action-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+}
+.audit-action-dot.load {
+  background: var(--process);
+}
+.audit-action-dot.unload {
+  background: var(--ink-4);
+}
+.audit-action-dot.infer {
+  background: var(--accent);
+}
+.audit-action-dot.error {
+  background: var(--live);
+}
+.audit-duration {
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  color: var(--ink);
+}
+.audit-duration-unit {
+  color: var(--ink-4);
+  font-size: 10px;
+  margin-left: 2px;
+}
+.audit-metric {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+.audit-metric-unit {
+  color: var(--ink-4);
+  font-size: 10px;
+  margin-left: 1px;
+}
+.audit-empty {
+  font-size: 12px;
+  color: var(--ink-4);
+  padding: var(--s-3) var(--s-4);
+  font-style: italic;
 }
 
 /* ---------- Utilities --------------------------------------------------- */

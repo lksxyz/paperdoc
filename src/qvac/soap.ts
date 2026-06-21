@@ -1,6 +1,6 @@
 import { loadModelByName, unloadModelByName, getQvacSdk } from "./init.js";
-
 import { QWEN3_1_7B_INST_Q4 } from "@qvac/sdk";
+import { addEvent } from "./audit.js";
 
 export interface SoapNote {
   subjective: string;
@@ -26,31 +26,27 @@ const SOAP_MODEL_CONFIG = {
 const SOAP_PROMPT = `You are a clinical scribe converting a doctor-patient conversation transcript into a SOAP note.
 
 SPEAKER ATTRIBUTION:
-- If the transcript includes speaker labels, do NOT trust them blindly — diarization is often wrong (mid-sentence speaker swaps, merged turns). Re-derive who is actually speaking from context before using any label.
-- Signals for DOCTOR: asks exam/history questions, states exam findings, orders tests, prescribes treatment, gives a diagnosis or referral.
-- Signals for PATIENT: reports symptoms in first person, answers yes/no, asks lay questions ("is it serious?").
-- SELF-CORRECTION RULE: if a speaker says something like "I mean X, not Y" or "sorry, I mean...", this is the SAME speaker correcting themselves — never attribute it as one party correcting or disagreeing with the other. Only treat it as the other party correcting/disagreeing if that party explicitly objects (e.g., "No, I think it's actually...", "I don't think that's right").
+- Don't trust speaker labels blindly — diarization can be wrong. Infer the true speaker from content: DOCTOR asks exam/history questions, states findings, orders tests, prescribes, gives diagnosis/referral. PATIENT reports symptoms in first person, answers questions, asks lay questions.
+- Self-corrections ("I mean X, not Y") belong to the SAME speaker. Only attribute a correction to the other party if they explicitly object ("No, I think it's actually...").
 
-HANDLING UNCLEAR/GARBLED TEXT:
-- Correct only high-confidence, obvious ASR errors (clear mishearings of common clinical terms).
-- If a word/phrase is garbled and the meaning is not obvious, write [unclear] rather than guessing.
-- Treat similarly-named but distinct tests/terms as SEPARATE items — e.g., "ECG" and "echocardiogram" are different tests; if both are mentioned, list both. Do not silently merge them because they sound alike.
+UNCLEAR TEXT:
+- Fix only obvious ASR mishearings of common clinical terms. If a word/phrase is garbled and meaning isn't obvious, write [unclear] — don't guess.
+- Keep similar-sounding but distinct tests/terms separate (e.g., ECG vs. echocardiogram). List both if both are mentioned.
 
-GROUNDING RULES — STRICT:
-- Use ONLY information explicitly stated in the transcript. Never infer, assume, estimate, or add anything not present — including vital signs, severity, timing details, or actions ("requests," "asks for") that were not explicitly stated.
-- Never state a vital sign (temperature, BP, HR, etc.) unless an actual value or explicit clinician statement about it appears in the transcript. If vitals aren't mentioned, omit that line entirely — do not default to "normal" or "no fever."
-- Do not invent exam descriptors. Translate lay language into clinical terms only if the underlying finding is preserved exactly (e.g., "muscles moving on their own, jerky" → "involuntary jerky movements (chorea)" is fine; inventing a different finding like "erythematous" is not).
-- ASSESSMENT: only state a diagnosis or impression if the clinician actually said it. Preserve hedging language ("I guess you have...", "this looks like...") rather than stating it as confirmed.
+GROUNDING — STRICT:
+- Use only what's explicitly stated. Never infer, estimate, or add anything not said — including vitals, severity, timing, or actions like "requested."
+- Omit a vitals line entirely if not stated; never default to "normal."
+- Lay language → clinical terms is fine only if the finding is preserved exactly (e.g., "jerky involuntary movements" → "chorea"). Don't invent a different finding.
+- ASSESSMENT: only include a diagnosis the clinician actually stated, with their hedging preserved ("looks like...", not stated as confirmed).
 
-SECTION BOUNDARIES — DO NOT MIX:
-- SUBJECTIVE = only what the patient reports about themselves, in their own framing (symptoms, history, answers).
-- OBJECTIVE = only what the clinician directly observes/measures/examines (exam findings, vital signs if explicitly stated). Never include tests ordered, medications, dietary advice, or referrals here — those belong only in PLAN.
-- PLAN = every distinct action the clinician states: every test ordered, every medication/treatment, every dietary/lifestyle instruction, every referral, every follow-up instruction. List each as a separate bullet — do not drop or merge items.
-- If a section has no relevant information, write exactly: Not discussed.
+SECTIONS:
+- SUBJECTIVE: only the patient's own reported symptoms/history/answers.
+- OBJECTIVE: only the clinician's direct exam findings/measurements. No tests ordered, meds, diet advice, or referrals here.
+- PLAN: every distinct clinician action — each test, medication, lifestyle instruction, referral, follow-up — as its own bullet. Don't merge or drop items.
+- If a section has nothing relevant, write exactly: Not discussed.
 
-OUTPUT FORMAT:
-- Output ONLY the four SOAP sections (SUBJECTIVE, OBJECTIVE, ASSESSMENT, PLAN) with bullet points where there are multiple items.
-- Do NOT add a "Notes" section, disclaimers, explanations of your reasoning, or any text before/after the four sections.
+OUTPUT:
+- Output only the four SOAP sections, bullets for multiple items. No extra notes, disclaimers, or commentary.
 
 Example:
 Transcript:
@@ -70,6 +66,7 @@ Transcript:
 {TRANSCRIPT}
 
 SOAP:`;
+
 export async function generateSoap(transcript: string): Promise<SoapNote> {
   const sdk = await getQvacSdk();
   const modelId = await loadModelByName(
@@ -82,30 +79,70 @@ export async function generateSoap(transcript: string): Promise<SoapNote> {
   const prompt = SOAP_PROMPT.replace("{TRANSCRIPT}", transcript);
   console.log(`  [SOAP] Prompt: ${prompt.length} chars`);
 
-  const result: any = sdk.completion({
-    modelId,
-    history: [{ role: "user", content: prompt }],
-    stream: false,
+  addEvent({
+    event: "inference",
+    model_name: "llm",
+    model_type: QWEN3_1_7B_INST_Q4,
+    inference_type: "completion",
+    status: "start",
+    input_size: prompt.length,
   });
+  const start = Date.now();
 
-  const fullText: string = await result.text;
-
+  let fullText: string;
   let stats: SoapNote["stats"] = undefined;
-  if (result && typeof result === "object" && "final" in result) {
-    const final = await result.final;
-    if (final && final.stats) {
-      stats = {
-        tokensPerSecond: final.stats.tokensPerSecond,
-        timeToFirstToken: final.stats.timeToFirstToken,
-        generatedTokens: final.stats.generatedTokens,
-        promptTokens: final.stats.promptTokens,
-        backendDevice: final.stats.backendDevice,
-      };
-      console.log(
-        `  [SOAP] Stats: ${stats.tokensPerSecond?.toFixed(1)} tok/s, ${stats.generatedTokens} tokens, ${stats.backendDevice}`,
-      );
+  try {
+    const result: any = sdk.completion({
+      modelId,
+      history: [{ role: "user", content: prompt }],
+      stream: false,
+    });
+
+    fullText = await result.text;
+
+    if (result && typeof result === "object" && "final" in result) {
+      const final = await result.final;
+      if (final && final.stats) {
+        stats = {
+          tokensPerSecond: final.stats.tokensPerSecond,
+          timeToFirstToken: final.stats.timeToFirstToken,
+          generatedTokens: final.stats.generatedTokens,
+          promptTokens: final.stats.promptTokens,
+          backendDevice: final.stats.backendDevice,
+        };
+        console.log(
+          `  [SOAP] Stats: ${stats.tokensPerSecond?.toFixed(1)} tok/s, ${stats.generatedTokens} tokens, ${stats.backendDevice}`,
+        );
+      }
     }
+  } catch (err) {
+    addEvent({
+      event: "inference",
+      model_name: "llm",
+      model_type: QWEN3_1_7B_INST_Q4,
+      inference_type: "completion",
+      status: "error",
+      duration_ms: Date.now() - start,
+      input_size: prompt.length,
+      error: String(err),
+    });
+    await unloadModelByName("llm");
+    throw err;
   }
+
+  const duration = Date.now() - start;
+  addEvent({
+    event: "inference",
+    model_name: "llm",
+    model_type: QWEN3_1_7B_INST_Q4,
+    inference_type: "completion",
+    status: "success",
+    duration_ms: duration,
+    input_size: prompt.length,
+    tokens_generated: stats?.generatedTokens ?? fullText.length,
+    ttft_ms: stats?.timeToFirstToken,
+    tokens_per_sec: stats?.tokensPerSecond,
+  });
 
   console.log(`  ✓ SOAP: ${fullText.length} chars`);
 
@@ -150,6 +187,14 @@ export async function* generateSoapStream(
   const prompt = SOAP_PROMPT.replace("{TRANSCRIPT}", transcript);
   console.log(`  [SOAP stream] Prompt: ${prompt.length} chars`);
 
+  addEvent({
+    event: "inference",
+    model_name: "llm",
+    model_type: QWEN3_1_7B_INST_Q4,
+    inference_type: "completion",
+    status: "start",
+    input_size: prompt.length,
+  });
   const startTime = Date.now();
   let tokenCount = 0;
   let fullText = "";
@@ -183,6 +228,16 @@ export async function* generateSoapStream(
       };
     }
   } catch (err) {
+    addEvent({
+      event: "inference",
+      model_name: "llm",
+      model_type: QWEN3_1_7B_INST_Q4,
+      inference_type: "completion",
+      status: "error",
+      duration_ms: Date.now() - startTime,
+      input_size: prompt.length,
+      error: String(err),
+    });
     await unloadModelByName("llm").catch(() => {});
     yield { type: "error", message: String(err) };
     return;
@@ -202,14 +257,32 @@ export async function* generateSoapStream(
     }
   }
 
+  const inferenceDuration = Date.now() - startTime;
+  const finalTtft =
+    finalStats.timeToFirstToken ?? timeToFirstTokenMs ?? undefined;
+  const finalTokPerSec =
+    finalStats.tokensPerSecond ??
+    (inferenceDuration > 0 ? (tokenCount * 1000) / inferenceDuration : 0);
+  addEvent({
+    event: "inference",
+    model_name: "llm",
+    model_type: QWEN3_1_7B_INST_Q4,
+    inference_type: "completion",
+    status: "success",
+    duration_ms: inferenceDuration,
+    input_size: prompt.length,
+    tokens_generated: finalStats.generatedTokens ?? tokenCount,
+    ttft_ms: finalTtft,
+    tokens_per_sec: finalTokPerSec,
+  });
+
   await unloadModelByName("llm");
 
   const note = parseSoap(fullText);
   note.raw = fullText;
   note.stats = {
     tokensPerSecond: finalStats.tokensPerSecond,
-    timeToFirstToken:
-      finalStats.timeToFirstToken ?? timeToFirstTokenMs ?? undefined,
+    timeToFirstToken: finalTtft,
     generatedTokens: finalStats.generatedTokens ?? tokenCount,
     promptTokens: finalStats.promptTokens,
     backendDevice: finalStats.backendDevice,
@@ -220,11 +293,9 @@ export async function* generateSoapStream(
     type: "done",
     soap: note,
     tokenCount,
-    tokensPerSecond:
-      note.stats.tokensPerSecond ??
-      (elapsedMs > 0 ? (tokenCount * 1000) / elapsedMs : 0),
+    tokensPerSecond: finalTokPerSec,
     elapsedMs,
-    timeToFirstToken: note.stats.timeToFirstToken ?? 0,
+    timeToFirstToken: finalTtft ?? 0,
     backendDevice: note.stats.backendDevice,
   };
 

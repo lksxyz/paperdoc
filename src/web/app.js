@@ -849,6 +849,18 @@ async function runPipeline(audioBlob, contentType, outputEl, meta = {}) {
     }
   });
 
+  // Render audit trail
+  try {
+    const auditRes = await fetch("/api/audit-log");
+    const auditData = await auditRes.json();
+    if (auditData.events && auditData.events.length) {
+      const auditWrap = document.createElement("div");
+      auditWrap.style.marginTop = "0";
+      renderAuditLog(auditWrap, auditData.events);
+      outputEl.appendChild(auditWrap);
+    }
+  } catch { /* audit log unavailable */ }
+
   // Scroll the result into view so the user actually sees it
   requestAnimationFrame(() => {
     refs.transcribe.el.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -872,6 +884,82 @@ function formatSoapForExport(soap) {
     "PLAN:",
     soap.plan || "Not discussed.",
   ].join("\n");
+}
+
+/* ---------- Audit trail renderer ---------------------------------------- */
+function renderAuditLog(container, events) {
+  if (!events || events.length === 0) {
+    container.innerHTML = `<div class="audit-empty">No audit events recorded for this session.</div>`;
+    return;
+  }
+
+  const inferenceEvents = events.filter(e => e.event === "inference");
+  const lifecycleEvents = events.filter(e => e.event === "model_load" || e.event === "model_unload");
+
+  const step = document.createElement("div");
+  step.className = "audit-step";
+  step.innerHTML = `
+    <button class="audit-toggle" type="button" aria-expanded="false">
+      <span class="audit-toggle-icon">›</span>
+      <span>Audit trail</span>
+      <span class="audit-badge">${inferenceEvents.length} inference · ${lifecycleEvents.length} model events</span>
+    </button>
+    <div class="audit-body"></div>
+  `;
+
+  const body = step.querySelector(".audit-body");
+
+  let html = '<div class="audit-list">';
+
+  // header row
+  html += `<div class="audit-row-head">
+    <span>Model</span><span>Event</span><span>Duration</span><span>Tokens</span><span>Rate</span><span>TTFT</span>
+  </div>`;
+
+  for (const ev of events) {
+    const type = ev.event === "inference" ? "infer" : ev.event === "model_load" ? "load" : "unload";
+    const actionLabel = ev.event === "inference"
+      ? ev.inference_type || "infer"
+      : ev.event === "model_load" ? "load" : "unload";
+    const durationMs = ev.duration_ms || 0;
+    const durationLabel = durationMs >= 1000
+      ? (durationMs / 1000).toFixed(1)
+      : String(Math.round(durationMs));
+    const durationUnit = durationMs >= 1000 ? "s" : "ms";
+    const tokenLabel = ev.event === "inference"
+      ? String(ev.tokens_generated ?? "—")
+      : "—";
+    const rateLabel = ev.tokens_per_sec != null
+      ? ev.tokens_per_sec.toFixed(1)
+      : "—";
+    const ttftLabel = ev.ttft_ms != null
+      ? (ev.ttft_ms / 1000).toFixed(2) + "s"
+      : "—";
+    const statusDot = ev.status === "error" ? "error" : type;
+
+    html += `<div class="audit-row${ev.event === "inference" ? " is-inference" : " is-load"}">
+      <span class="audit-model" title="${ev.model_type}">${ev.model_name}</span>
+      <span class="audit-action">
+        <span class="audit-action-dot ${statusDot}"></span>
+        ${actionLabel}
+      </span>
+      <span class="audit-duration">${durationLabel}<span class="audit-duration-unit">${durationUnit}</span></span>
+      <span class="audit-metric">${tokenLabel}</span>
+      <span class="audit-metric">${rateLabel}</span>
+      ${ev.event === "inference" ? `<span class="audit-metric">${ttftLabel}</span>` : `<span class="audit-metric">—</span>`}
+    </div>`;
+  }
+
+  html += "</div>";
+  body.innerHTML = html;
+
+  const toggle = step.querySelector(".audit-toggle");
+  toggle.addEventListener("click", () => {
+    const isOpen = step.classList.toggle("is-open");
+    toggle.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  container.appendChild(step);
 }
 
 function escapeHtml(s) {
@@ -1020,6 +1108,7 @@ function renderLibrary(sessions) {
 
 async function openSession(id) {
   els.libraryDetail.hidden = false;
+  els.libraryDetail.dataset.sessionId = String(id);
   els.libraryDetail.innerHTML = `<div class="detail-body" style="padding:32px;color:var(--ink-4);">Loading…</div>`;
   try {
     const res = await fetch(`/api/sessions/${id}`);
@@ -1037,6 +1126,10 @@ async function openSession(id) {
       )
       .join("\n");
 
+    // detect if there's any session content vs just empty session
+    const hasSoap = !!data.soap;
+    const hasTranscript = data.transcripts && data.transcripts.length > 0;
+
     els.libraryDetail.innerHTML = `
       <div class="detail-head">
         <div>
@@ -1045,21 +1138,78 @@ async function openSession(id) {
         </div>
         <span class="session-tag tag-${tag}">${tag}</span>
       </div>
-      <div class="detail-body">
+      <nav class="detail-tabs">
+        <button class="detail-tab is-active" data-pane="result">Result</button>
+        <button class="detail-tab" data-pane="audit">Audit log</button>
+      </nav>
+      <div class="detail-pane is-active" data-pane="result">
         ${
-          data.soap
-            ? `<div id="detail-soap"></div>
-             <h3 class="workspace-eyebrow" style="margin-top:32px;">Transcript</h3>
-             <div class="transcript-text" style="margin-top:8px;">${transcriptHtml || "<em>No transcript.</em>"}</div>`
-            : `<h3 class="workspace-eyebrow">Transcript</h3>
-             <div class="transcript-text" style="margin-top:8px;">${transcriptHtml || "<em>No transcript.</em>"}</div>
-             <p style="margin-top:16px;color:var(--ink-4);">No SOAP note generated yet.</p>`
+          hasSoap || hasTranscript
+            ? `${hasSoap ? '<div id="detail-soap"></div>' : ''}
+               ${hasTranscript ? '<h3 class="workspace-eyebrow" style="margin-top:32px;">Transcript</h3><div class="transcript-text" style="margin-top:8px;">' + (transcriptHtml || "<em>No transcript.</em>") + '</div>' : ''}
+               ${!hasSoap && !hasTranscript ? '<p style="color:var(--ink-4);">No content for this session.</p>' : ''}`
+            : `<p style="color:var(--ink-4);">No content for this session.</p>`
         }
       </div>
+      <div class="detail-pane" data-pane="audit"></div>
     `;
     if (data.soap) {
       renderSoap($("#detail-soap"), data.soap);
     }
+
+    // tab switching
+    const tabs = els.libraryDetail.querySelectorAll(".detail-tab");
+    const panes = els.libraryDetail.querySelectorAll(".detail-pane");
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", async () => {
+        const pane = tab.dataset.pane;
+        tabs.forEach((t) => t.classList.remove("is-active"));
+        panes.forEach((p) => p.classList.remove("is-active"));
+        tab.classList.add("is-active");
+        const target = els.libraryDetail.querySelector(`.detail-pane[data-pane="${pane}"]`);
+        if (target) target.classList.add("is-active");
+        // lazy load audit log
+        if (pane === "audit" && !target.dataset.loaded) {
+          target.dataset.loaded = "1";
+          target.innerHTML = '<div style="padding:16px;color:var(--ink-4);">Loading audit log…</div>';
+          try {
+            const auditRes = await fetch("/api/audit-log");
+            const auditData = await auditRes.json();
+            if (auditData.events && auditData.events.length) {
+              target.innerHTML = '<div class="audit-list" style="padding:0;"></div>';
+              const list = target.querySelector(".audit-list");
+              let html = `<div class="audit-row-head" style="display:grid;grid-template-columns:80px auto 60px 70px 60px 70px;gap:var(--s-3);align-items:center;padding:4px var(--s-3) 3px;font-size:10px;font-weight:600;letter-spacing:0.08em;text-transform:uppercase;color:var(--ink-4);border-bottom:1px solid var(--hairline);margin-bottom:var(--s-1);">
+                <span>Model</span><span>Event</span><span>Duration</span><span>Tokens</span><span>Rate</span><span>TTFT</span>
+              </div>`;
+              for (const ev of auditData.events) {
+                const isInf = ev.event === "inference";
+                const actionLabel = isInf ? (ev.inference_type || "infer") : ev.event === "model_load" ? "load" : "unload";
+                const d = ev.duration_ms || 0;
+                const dur = d >= 1000 ? (d / 1000).toFixed(1) + '<span class="audit-duration-unit">s</span>' : Math.round(d) + '<span class="audit-duration-unit">ms</span>';
+                const tok = isInf ? (ev.tokens_generated ?? "—") : "—";
+                const rate = ev.tokens_per_sec != null ? ev.tokens_per_sec.toFixed(1) : "—";
+                const ttft = ev.ttft_ms != null ? (ev.ttft_ms / 1000).toFixed(2) + "s" : "—";
+                const dot = ev.status === "error" ? "error" : (isInf ? "infer" : (ev.event === "model_load" ? "load" : "unload"));
+                html += `<div class="audit-row" data-event="${ev.event}" style="display:grid;grid-template-columns:80px auto 60px 70px 60px 70px;gap:var(--s-3);align-items:center;padding:5px var(--s-3);font-family:var(--font-mono);font-size:12px;color:var(--ink-2);border-radius:var(--r-xs);">
+                  <span class="audit-model" style="font-weight:500;color:var(--ink);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${ev.model_name}</span>
+                  <span class="audit-action" style="display:inline-flex;align-items:center;gap:5px;font-size:11px;"><span class="audit-action-dot ${dot}" style="width:6px;height:6px;border-radius:50%;flex:0 0 auto;background:${dot === "infer" ? "var(--accent)" : dot === "load" ? "var(--process)" : dot === "error" ? "var(--live)" : "var(--ink-4)"};"></span>${actionLabel}</span>
+                  <span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);">${dur}</span>
+                  <span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);">${tok}</span>
+                  <span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);">${rate}</span>
+                  <span style="text-align:right;font-variant-numeric:tabular-nums;color:var(--ink);">${ttft}</span>
+                </div>`;
+              }
+              list.innerHTML = html;
+            } else {
+              target.innerHTML = '<div style="padding:16px;color:var(--ink-4);font-style:italic;">No audit events recorded. Clear the log before your next demo run with <code style="background:var(--paper-2);padding:1px 6px;border-radius:3px;font-size:12px;">DELETE /api/audit-log</code></div>';
+            }
+          } catch (err) {
+            target.innerHTML = `<div style="padding:16px;color:var(--live);">Failed to load audit log: ${escapeHtml(err.message)}</div>`;
+          }
+        }
+      });
+    });
+
     els.libraryDetail.scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
     els.libraryDetail.innerHTML = `<div class="detail-body" style="padding:32px;color:var(--live);">${escapeHtml(err.message)}</div>`;

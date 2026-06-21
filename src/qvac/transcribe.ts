@@ -1,5 +1,6 @@
 import { loadModelByName, unloadModelByName, getQvacSdk } from "./init.js";
 import { WHISPER_EN_TINY_Q8_0, PARAKEET_TDT_0_6B_V3_Q8_0, PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0 } from "@qvac/sdk";
+import { addEvent } from "./audit.js";
 
 export interface DiarizedSegment {
   speaker: string;
@@ -27,16 +28,28 @@ export async function transcribeLive(
     temperature: 0.0,
   });
 
-  const session = await sdk.transcribeStream({ modelId });
-
-  session.write(audioBuffer);
-  session.end();
+  addEvent({ event: "inference", model_name: "asr_live", model_type: WHISPER_EN_TINY_Q8_0, inference_type: "transcribeStream", status: "start" });
+  const start = Date.now();
 
   let fullText = "";
-  for await (const text of session) {
-    fullText += text;
-    if (onChunk) onChunk(text);
+  try {
+    const session = await sdk.transcribeStream({ modelId });
+
+    session.write(audioBuffer);
+    session.end();
+
+    for await (const text of session) {
+      fullText += text;
+      if (onChunk) onChunk(text);
+    }
+  } catch (err) {
+    addEvent({ event: "inference", model_name: "asr_live", model_type: WHISPER_EN_TINY_Q8_0, inference_type: "transcribeStream", status: "error", duration_ms: Date.now() - start, error: String(err) });
+    await unloadModelByName("asr_live");
+    throw err;
   }
+
+  const duration = Date.now() - start;
+  addEvent({ event: "inference", model_name: "asr_live", model_type: WHISPER_EN_TINY_Q8_0, inference_type: "transcribeStream", status: "success", duration_ms: duration, tokens_generated: fullText.length });
 
   await unloadModelByName("asr_live");
   return fullText.trim();
@@ -53,23 +66,35 @@ export async function transcribeBatch(audioPath: string): Promise<string> {
     "parakeet-transcription"
   );
 
-  const result = await sdk.transcribe({
-    modelId,
-    audioChunk: audioPath,
-  });
+  addEvent({ event: "inference", model_name: "asr_batch", model_type: PARAKEET_TDT_0_6B_V3_Q8_0, inference_type: "transcribe", status: "start" });
+  const start = Date.now();
 
   let text = "";
-  if (typeof result === "string") {
-    text = result;
-  } else if (result && typeof result === "object") {
-    if ("text" in result && typeof (result as any).text === "string") {
-      text = (result as any).text;
-    } else if ("tokenStream" in result) {
-      for await (const token of (result as any).tokenStream) {
-        text += String(token);
+  try {
+    const result = await sdk.transcribe({
+      modelId,
+      audioChunk: audioPath,
+    });
+
+    if (typeof result === "string") {
+      text = result;
+    } else if (result && typeof result === "object") {
+      if ("text" in result && typeof (result as any).text === "string") {
+        text = (result as any).text;
+      } else if ("tokenStream" in result) {
+        for await (const token of (result as any).tokenStream) {
+          text += String(token);
+        }
       }
     }
+  } catch (err) {
+    addEvent({ event: "inference", model_name: "asr_batch", model_type: PARAKEET_TDT_0_6B_V3_Q8_0, inference_type: "transcribe", status: "error", duration_ms: Date.now() - start, error: String(err) });
+    await unloadModelByName("asr_batch");
+    throw err;
   }
+
+  const duration = Date.now() - start;
+  addEvent({ event: "inference", model_name: "asr_batch", model_type: PARAKEET_TDT_0_6B_V3_Q8_0, inference_type: "transcribe", status: "success", duration_ms: duration, tokens_generated: text.length });
 
   console.log(`  ✓ Transcribed ${text.length} characters`);
 
@@ -146,22 +171,34 @@ export async function runSortformer(audioPath: string): Promise<DiarizedSegment[
     "parakeet-transcription"
   );
 
-  const result = await sdk.transcribe({
-    modelId,
-    audioChunk: audioPath,
-  });
+  addEvent({ event: "inference", model_name: "diarization", model_type: PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0, inference_type: "transcribe", status: "start" });
+  const start = Date.now();
 
   let outputStr = "";
-  if (typeof result === "string") {
-    outputStr = result;
-  } else if (result && typeof result === "object") {
-    if ("text" in result) outputStr = String((result as any).text);
-    else if ("tokenStream" in result) {
-      for await (const token of (result as any).tokenStream) {
-        outputStr += String(token);
+  try {
+    const result = await sdk.transcribe({
+      modelId,
+      audioChunk: audioPath,
+    });
+
+    if (typeof result === "string") {
+      outputStr = result;
+    } else if (result && typeof result === "object") {
+      if ("text" in result) outputStr = String((result as any).text);
+      else if ("tokenStream" in result) {
+        for await (const token of (result as any).tokenStream) {
+          outputStr += String(token);
+        }
       }
     }
+  } catch (err) {
+    addEvent({ event: "inference", model_name: "diarization", model_type: PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0, inference_type: "transcribe", status: "error", duration_ms: Date.now() - start, error: String(err) });
+    await unloadModelByName("diarization");
+    throw err;
   }
+
+  const duration = Date.now() - start;
+  addEvent({ event: "inference", model_name: "diarization", model_type: PARAKEET_SORTFORMER_4SPK_V2_1_Q8_0, inference_type: "transcribe", status: "success", duration_ms: duration, tokens_generated: outputStr.length });
 
   const segments = parseSortformerString(outputStr);
   console.log(`  ✓ Detected ${segments.length} speaker segments`);

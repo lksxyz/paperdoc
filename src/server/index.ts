@@ -21,7 +21,7 @@ export async function startServer(port: number) {
 
   app.route("/api", apiRoutes);
   app.use("/*", serveStatic({ root: webDir }));
-  app.get("*", (c) => c.html(Bun.file(join(webDir, "index.html"))));
+  app.get("*", async (c) => c.html(await Bun.file(join(webDir, "index.html")).text()));
 
   bunServer = Bun.serve({
     port,
