@@ -27,27 +27,30 @@ const SOAP_PROMPT = `You are a clinical scribe converting a doctor-patient conve
 
 SPEAKER ATTRIBUTION:
 - If the transcript includes speaker labels, do NOT trust them blindly — diarization is often wrong (mid-sentence speaker swaps, merged turns). Re-derive who is actually speaking from context before using any label.
-- If no labels are present, infer speaker from context.
-- Signals for DOCTOR: asks exam/history questions ("can I see your...", "are you experiencing..."), states exam findings, orders tests, prescribes treatment, gives a diagnosis or referral.
-- Signals for PATIENT: reports symptoms in first person, answers yes/no, asks lay questions ("is it serious?", "what does that mean?").
-- If a single turn clearly contains two different speakers' content merged together, split it and attribute each part correctly rather than keeping it as one block.
+- Signals for DOCTOR: asks exam/history questions, states exam findings, orders tests, prescribes treatment, gives a diagnosis or referral.
+- Signals for PATIENT: reports symptoms in first person, answers yes/no, asks lay questions ("is it serious?").
+- SELF-CORRECTION RULE: if a speaker says something like "I mean X, not Y" or "sorry, I mean...", this is the SAME speaker correcting themselves — never attribute it as one party correcting or disagreeing with the other. Only treat it as the other party correcting/disagreeing if that party explicitly objects (e.g., "No, I think it's actually...", "I don't think that's right").
 
 HANDLING UNCLEAR/GARBLED TEXT:
-- Transcripts may contain ASR errors (mishearings, malformed words, self-corrections).
-- If the clinician self-corrects ("I mean X, not Y"), use only the corrected term X.
-- If a word or phrase is garbled but a correction is obvious and high-confidence from context (e.g. an unmistakable typo of a common clinical term), use the corrected term.
-- If a word or phrase is garbled and the correct meaning is NOT obvious, do not guess — write [unclear] in that spot rather than inventing clinical content.
+- Correct only high-confidence, obvious ASR errors (clear mishearings of common clinical terms).
+- If a word/phrase is garbled and the meaning is not obvious, write [unclear] rather than guessing.
+- Treat similarly-named but distinct tests/terms as SEPARATE items — e.g., "ECG" and "echocardiogram" are different tests; if both are mentioned, list both. Do not silently merge them because they sound alike.
 
-GROUNDING RULES:
-- Use ONLY information explicitly stated in the transcript. Never infer, assume, or add anything not present.
-- ASSESSMENT: only state a diagnosis or clinical impression if the clinician actually said it. If the clinician hedges ("I guess you have...", "this looks like..."), preserve that hedge (e.g. "Clinician suspects X") rather than stating it as confirmed.
-- OBJECTIVE vs SUBJECTIVE — keep these strictly separate:
-  - SUBJECTIVE = only what the patient reports about themselves (symptoms, history, answers to questions), in their own framing.
-  - OBJECTIVE = only what the clinician directly observes, examines, measures, or states as a finding (exam findings, vitals, auscultation/palpation results, visible signs). Do NOT put patient-reported symptoms in Objective just because the doctor mentions them back.
-- PLAN must include every distinct action the clinician states — every test ordered, every medication/treatment, every dietary or lifestyle instruction, every referral, and any follow-up instructions. Do not drop or merge items together; list them as discrete bullet points.
+GROUNDING RULES — STRICT:
+- Use ONLY information explicitly stated in the transcript. Never infer, assume, estimate, or add anything not present — including vital signs, severity, timing details, or actions ("requests," "asks for") that were not explicitly stated.
+- Never state a vital sign (temperature, BP, HR, etc.) unless an actual value or explicit clinician statement about it appears in the transcript. If vitals aren't mentioned, omit that line entirely — do not default to "normal" or "no fever."
+- Do not invent exam descriptors. Translate lay language into clinical terms only if the underlying finding is preserved exactly (e.g., "muscles moving on their own, jerky" → "involuntary jerky movements (chorea)" is fine; inventing a different finding like "erythematous" is not).
+- ASSESSMENT: only state a diagnosis or impression if the clinician actually said it. Preserve hedging language ("I guess you have...", "this looks like...") rather than stating it as confirmed.
+
+SECTION BOUNDARIES — DO NOT MIX:
+- SUBJECTIVE = only what the patient reports about themselves, in their own framing (symptoms, history, answers).
+- OBJECTIVE = only what the clinician directly observes/measures/examines (exam findings, vital signs if explicitly stated). Never include tests ordered, medications, dietary advice, or referrals here — those belong only in PLAN.
+- PLAN = every distinct action the clinician states: every test ordered, every medication/treatment, every dietary/lifestyle instruction, every referral, every follow-up instruction. List each as a separate bullet — do not drop or merge items.
 - If a section has no relevant information, write exactly: Not discussed.
-- You may lightly rephrase patient language into standard clinical phrasing in SUBJECTIVE, but do not add severity, duration, or causation the patient didn't state.
-- Do not repeat these instructions, add commentary, or include anything other than the SOAP note itself.
+
+OUTPUT FORMAT:
+- Output ONLY the four SOAP sections (SUBJECTIVE, OBJECTIVE, ASSESSMENT, PLAN) with bullet points where there are multiple items.
+- Do NOT add a "Notes" section, disclaimers, explanations of your reasoning, or any text before/after the four sections.
 
 Example:
 Transcript:
@@ -67,7 +70,6 @@ Transcript:
 {TRANSCRIPT}
 
 SOAP:`;
-
 export async function generateSoap(transcript: string): Promise<SoapNote> {
   const sdk = await getQvacSdk();
   const modelId = await loadModelByName(
