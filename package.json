@@ -6,6 +6,7 @@
   "bin": {
     "paperdoc": "./src/cli.ts"
   },
+  "license": "Apache-2.0",
   "scripts": {
     "dev": "bun run src/cli.ts run",
     "download-model": "bun run src/cli.ts download-model",
