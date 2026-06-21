@@ -1427,3 +1427,443 @@ scrollbar-gutter: stable;
     transition-duration: 0.001ms !important;
   }
 }
+
+/* =========================================================================
+   Responsive — tablet & mobile
+   The desktop layout is preserved at >720px. Below 720px the inline nav
+   detaches into a fixed bottom tab bar; the header compacts; padding,
+   type, and the SOAP grid all scale down for one-handed clinic use.
+   ========================================================================= */
+
+/* Hide the nav glyphs on desktop — they're only needed for the tab bar */
+.nav-icon {
+  display: none;
+}
+
+@media (max-width: 720px) {
+  /* ---------- Notice band: tighter, two-line aware -------------------- */
+  .notice-band {
+    padding: 8px 16px;
+    font-size: 11.5px;
+    line-height: 1.4;
+  }
+
+  /* ---------- Header: drop brand tag, compact system pill ------------- */
+  .app-header {
+    padding: 10px 16px;
+    top: 48px; /* clears the (possibly 2-line) notice band on mobile */
+    gap: 8px;
+    /* backdrop-filter creates a containing block that traps
+       position: fixed descendants inside the header. Disable on mobile
+       so the bottom tab bar can fix to the viewport. */
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+  .brand {
+    min-width: 0;
+  }
+  .brand-tag {
+    display: none;
+  }
+  .brand-mark {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+  }
+  .brand-mark svg {
+    width: 18px;
+    height: 18px;
+  }
+  .brand-text {
+    min-width: 0;
+  }
+  .brand-name {
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .system-pill {
+    padding: 5px 9px 5px 7px;
+    font-size: 11.5px;
+    flex: 0 0 auto;
+  }
+
+  /* ---------- Primary nav → fixed bottom tab bar --------------------- */
+  .primary-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 60;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    gap: 4px;
+    padding: 6px 8px calc(6px + env(safe-area-inset-bottom, 0px));
+    background: var(--surface);
+    border-top: 1px solid var(--hairline);
+    box-shadow:
+      0 -1px 0 oklch(0% 0 0 / 0.02),
+      0 -4px 16px oklch(0% 0 0 / 0.04);
+  }
+  .nav-link {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 4px;
+    min-height: 48px;
+    color: var(--ink-3);
+  }
+  .nav-link::after {
+    display: none;
+  }
+  .nav-link.is-active {
+    color: var(--ink);
+    background: var(--paper-soft);
+  }
+  .nav-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 22px;
+    height: 22px;
+  }
+  .nav-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* ---------- Workspace shell --------------------------------------- */
+  .workspace {
+    padding: 28px 16px calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+  .workspace-header {
+    margin-bottom: 24px;
+  }
+  .workspace-eyebrow {
+    font-size: 10.5px;
+    letter-spacing: 0.12em;
+    margin-bottom: 10px;
+  }
+  .workspace-title {
+    font-size: 28px;
+    letter-spacing: -0.022em;
+  }
+  .workspace-lede {
+    font-size: 15px;
+    line-height: 1.5;
+  }
+
+  /* ---------- Stage (Record view) ----------------------------------- */
+  .stage {
+    padding: 24px 20px;
+    gap: 20px;
+    border-radius: var(--r-lg);
+  }
+  .stage-monitor {
+    gap: 16px;
+  }
+  .timer-digits {
+    font-size: 48px;
+  }
+  .timer-suffix {
+    font-size: 18px;
+  }
+  .waveform {
+    height: 72px;
+  }
+  .stage-status {
+    font-size: 13px;
+  }
+
+  /* ---------- Stage actions: full-width, touch-friendly -------------- */
+  .stage-actions {
+    width: 100%;
+  }
+  .btn-record,
+  .btn-stop,
+  .btn-primary {
+    width: 100%;
+    justify-content: center;
+    padding: 14px 20px;
+    min-height: 48px;
+    font-size: 15px;
+  }
+  .stage-actions-row {
+    justify-content: stretch;
+  }
+  .stage-actions-row .btn-primary {
+    width: 100%;
+    margin: 0;
+  }
+
+  /* ---------- Live panel -------------------------------------------- */
+  .panel-head {
+    padding: 10px 14px;
+  }
+  .panel-eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .panel-meta {
+    font-size: 11px;
+  }
+  .live-stream {
+    padding: 12px 14px;
+    font-size: 13px;
+    max-height: 180px;
+  }
+
+  /* ---------- Output / pipeline steps ------------------------------- */
+  .output {
+    gap: 12px;
+  }
+  .step-head {
+    padding: 12px 14px;
+    gap: 10px;
+  }
+  .step-title {
+    font-size: 13.5px;
+  }
+  .step-status {
+    font-size: 11.5px;
+  }
+  .step-body {
+    padding: 0 14px 14px;
+    font-size: 13.5px;
+  }
+  .transcript-text {
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.65;
+  }
+
+  /* ---------- Result bar: stack stats above, actions below --------- */
+  .result-bar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 12px;
+  }
+  .result-stats {
+    gap: 6px 14px;
+  }
+  .result-stats .stat-label,
+  .result-stats .stat-value {
+    font-size: 11.5px;
+  }
+  .result-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .result-copy {
+    flex: 1;
+    padding: 8px 10px;
+    min-height: 36px;
+  }
+
+  /* ---------- SOAP streaming metrics -------------------------------- */
+  .soap-stream {
+    padding: 12px;
+  }
+  .soap-stream-head {
+    font-size: 11px;
+    letter-spacing: 0.06em;
+  }
+  .soap-stream-metric {
+    padding: 10px 12px;
+  }
+  .metric-value {
+    font-size: 16px;
+  }
+  .metric-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+  }
+  .soap-stream-preview {
+    font-size: 12px;
+    padding: 10px 12px;
+    max-height: 140px;
+  }
+
+  /* ---------- SOAP note --------------------------------------------- */
+  .soap-head {
+    padding: 12px 14px;
+  }
+  .soap-title {
+    font-size: 12px;
+  }
+  .soap-cell {
+    padding: 14px;
+    min-height: 90px;
+    gap: 8px;
+  }
+  .soap-cell-label {
+    font-size: 12px;
+    letter-spacing: 0.05em;
+  }
+  .soap-cell-body {
+    font-size: 14.5px;
+    line-height: 1.6;
+  }
+  .soap-stats {
+    padding: 10px 14px;
+    gap: 8px 14px;
+    font-size: 11px;
+  }
+  .soap-summary-row {
+    padding: 10px 12px;
+  }
+  .soap-summary-label {
+    font-size: 10.5px;
+  }
+  .soap-summary-preview {
+    font-size: 12.5px;
+  }
+
+  /* ---------- Dropzone & file card --------------------------------- */
+  .dropzone {
+    padding: 32px 20px;
+  }
+  .dropzone-glyph svg {
+    width: 32px;
+    height: 32px;
+  }
+  .dropzone-title {
+    font-size: 15px;
+  }
+  .dropzone-hint {
+    font-size: 12px;
+  }
+  .file-card {
+    min-width: 0;
+    width: 100%;
+    max-width: 100%;
+    padding: 10px 12px;
+    gap: 12px;
+  }
+  .file-glyph {
+    width: 32px;
+    height: 32px;
+    font-size: 16px;
+  }
+  .file-name {
+    font-size: 13.5px;
+  }
+  .file-remove {
+    width: 36px;
+    height: 36px;
+    font-size: 22px;
+  }
+
+  /* ---------- Library: session card stacks ------------------------- */
+  .library-empty {
+    padding: 40px 20px;
+  }
+  .library-empty-title {
+    font-size: 16px;
+  }
+  .library-empty-hint {
+    font-size: 13px;
+  }
+  .session-card {
+    grid-template-columns: 1fr auto;
+    grid-template-rows: auto auto;
+    gap: 8px 12px;
+    padding: 14px;
+  }
+  .session-info {
+    grid-column: 1 / 2;
+    grid-row: 1;
+  }
+  .session-tag {
+    grid-column: 1 / 2;
+    grid-row: 2;
+    justify-self: start;
+  }
+  .session-open {
+    grid-column: 2 / 3;
+    grid-row: 1 / 3;
+    align-self: center;
+    width: 36px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--r-sm);
+    background: var(--paper-soft);
+  }
+
+  /* ---------- Library detail: stack -------------------------------- */
+  .detail-head {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 16px;
+    gap: 10px;
+  }
+  .detail-title {
+    font-size: 18px;
+  }
+  .detail-meta {
+    font-size: 12px;
+  }
+  .detail-body {
+    padding: 16px;
+  }
+}
+
+/* ---------- Very small phones (≤380px) ----------------------------------- */
+@media (max-width: 380px) {
+  .workspace {
+    padding: 22px 12px calc(80px + env(safe-area-inset-bottom, 0px));
+  }
+  .stage {
+    padding: 20px 14px;
+  }
+  .timer-digits {
+    font-size: 42px;
+  }
+  .workspace-title {
+    font-size: 26px;
+  }
+  .nav-label {
+    font-size: 10.5px;
+  }
+  .brand-name {
+    font-size: 13.5px;
+  }
+  .system-pill {
+    padding: 4px 8px 4px 7px;
+  }
+  .soap-stream-metrics {
+    grid-template-columns: 1fr 1fr;
+  }
+  .soap-cell-body {
+    font-size: 14px;
+  }
+}
+
+/* ---------- Touch devices: no hover, but tap-highlight ------------------ */
+@media (hover: none) and (max-width: 720px) {
+  .session-card:hover,
+  .dropzone:hover,
+  .nav-link:hover,
+  .btn-secondary:hover,
+  .result-copy:hover {
+    background: inherit;
+    border-color: inherit;
+    color: inherit;
+  }
+  .session-card:active {
+    background: var(--paper-soft);
+    border-color: var(--ink-5);
+  }
+  .dropzone:active {
+    background: var(--surface-2);
+    border-color: var(--ink-3);
+  }
+}
